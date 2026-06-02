@@ -11,7 +11,6 @@ def create_or_get_user(api_token, vin=None):
     c = conn.cursor()
     c.execute("SELECT id, vin, leaf_balance, wh_balance FROM users WHERE api_token = %s", (api_token,))
     user = c.fetchone()
-
     if not user:
         c.execute("INSERT INTO users (api_token, vin) VALUES (%s, %s) RETURNING id, vin, leaf_balance, wh_balance",
                   (api_token, vin))
@@ -46,7 +45,7 @@ def get_last_odo(api_token):
 def add_session(vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, 
                 latitude, longitude, rpm, speed, bat_volts, bat_amps, 
                 quick_charges, plug_state, charge_mode, charge_power):
-    print(f"DEBUG add_session: vin={vin}, soh={soh}, odo={odo}, trip={trip}, plug={plug_state}")
+    print(f"DEBUG add_session: vin={vin}, soh={soh}, odo={odo}, trip={trip}")
     conn = get_connection()
     c = conn.cursor()
     try:
