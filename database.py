@@ -1,6 +1,7 @@
 import psycopg2
 from datetime import datetime
 
+# НЕ ЗАБУДЬ ЗАМЕНИТЬ [YOUR-PASSWORD] НА LeafToken2025Project
 DATABASE_URL = "postgresql://postgres.saulhayeumrjayidiyxd:LeafToken2025Project@aws-0-eu-west-1.pooler.supabase.com:6543/postgres"
 
 def get_connection():
@@ -9,16 +10,19 @@ def get_connection():
 def create_or_get_user(api_token, vin=None):
     conn = get_connection()
     c = conn.cursor()
+    # Проверяем, существует ли пользователь с таким api_token
     c.execute("SELECT id, vin, leaf_balance, wh_balance FROM users WHERE api_token = %s", (api_token,))
     user = c.fetchone()
 
     if not user:
+        # Если нет, создаём нового. Поле id (tg_id) заполнится само.
         c.execute("INSERT INTO users (api_token, vin) VALUES (%s, %s) RETURNING id, vin, leaf_balance, wh_balance",
                   (api_token, vin))
         user = c.fetchone()
         print(f"Создан новый пользователь с токеном {api_token}")
     conn.commit()
     conn.close()
+    # Возвращаем кортеж (id, vin, leaf_balance, wh_balance)
     return user
 
 def update_user_vin(api_token, vin):
@@ -28,11 +32,17 @@ def update_user_vin(api_token, vin):
     conn.commit()
     conn.close()
 
-def add_session(vin, soh, odo, trip):
+def add_session(vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges):
     conn = get_connection()
     c = conn.cursor()
-    c.execute("INSERT INTO sessions (vin, soh, odo, trip_distance) VALUES (%s, %s, %s, %s)",
-              (vin, soh, odo, trip))
+    c.execute("""
+        INSERT INTO sessions (
+            vin, soh, odo, trip_distance, 
+            bat_temp, soc, gids, amb_temp, 
+            latitude, longitude, rpm, speed, 
+            bat_volts, bat_amps, quick_charges
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges))
     conn.commit()
     conn.close()
 
