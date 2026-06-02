@@ -15,6 +15,12 @@ def leafspy_update():
     vin = request.args.get('VIN', request.args.get('vin', '')).upper()
     soh = request.args.get('SOH', request.args.get('soh', type=float))
     odo = request.args.get('Odo', request.args.get('odo', type=int))
+    if odo is not None:
+        try:
+            odo = int(odo)
+        except (ValueError, TypeError):
+            print(f"Ошибка: odo={odo} не удалось преобразовать в int")
+            odo = None
     trip = request.args.get('trip', type=float, default=0)
     
     bat_temp = request.args.get('BatTemp', type=float)
@@ -29,7 +35,12 @@ def leafspy_update():
     bat_amps = request.args.get('BatAmps', type=float)
     quick_charges = request.args.get('QC', type=int)
     
-    print(f"=== Запрос: token={token}, vin={vin}, soh={soh}, odo={odo}, trip={trip}")
+    # Параметры зарядки
+    plug_state = request.args.get('PlugState', type=int)
+    charge_mode = request.args.get('ChrgMode', type=int)
+    charge_power = request.args.get('ChrgPwr', type=int)
+    
+    print(f"=== Запрос: token={token}, vin={vin}, odo={odo}, trip={trip}, plug_state={plug_state}")
     
     if not token:
         return {"status": "error", "message": "Missing token"}
@@ -45,11 +56,12 @@ def leafspy_update():
     # Сохраняем все запросы
     if db_vin:
         add_session(db_vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, 
-                    latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges)
+                    latitude, longitude, rpm, speed, bat_volts, bat_amps, 
+                    quick_charges, plug_state, charge_mode, charge_power)
         print(f"Сохранена сессия для {db_vin}, odo={odo}, trip={trip}")
         
         # Начисление ёлок (только если пробег увеличился)
-        if odo is not None:
+        if odo is not None and isinstance(odo, int):
             last_odo = get_last_odo(token)
             odo_diff = max(0, odo - last_odo)
             if odo_diff > 0:
