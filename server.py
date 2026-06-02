@@ -17,7 +17,6 @@ def leafspy_update():
     odo = request.args.get('odo', type=int)
     trip = request.args.get('trip', type=float, default=0)
     
-    # Дополнительные параметры от LeafSpy
     bat_temp = request.args.get('BatTemp', type=float)
     soc = request.args.get('SOC', type=float)
     gids = request.args.get('Gids', type=int)
@@ -30,8 +29,7 @@ def leafspy_update():
     bat_amps = request.args.get('BatAmps', type=float)
     quick_charges = request.args.get('QC', type=int)
     
-    print(f"=== Запрос: token={token}, vin={vin}, odo={odo}")
-    print(f"DEBUG: bat_temp={bat_temp}, soc={soc}, latitude={latitude}")
+    print(f"=== Запрос: token={token}, vin={vin}, odo={odo}, trip={trip}")
     
     if not token:
         return {"status": "error", "message": "Missing token"}
@@ -39,38 +37,30 @@ def leafspy_update():
     user = create_or_get_user(token, vin if vin else None)
     user_id, db_vin, leaf_balance, wh_balance = user
     
-    print(f"DEBUG: db_vin из БД = {db_vin}")
-    print(f"DEBUG: vin из запроса = {vin}")
-    
     if not db_vin and vin:
-        print("DEBUG: Попытка привязать VIN")
         update_user_vin(token, vin)
         db_vin = vin
-        print(f"DEBUG: VIN {vin} привязан")
+        print(f"Привязан VIN {vin}")
     
-    if db_vin and odo is not None:
-        last_odo = get_last_odo(token)
-        odo_diff = max(0, odo - last_odo)
-        print(f"DEBUG: last_odo={last_odo}, odo_diff={odo_diff}")
+    # СОХРАНЯЕМ ВСЕ ЗАПРОСЫ (без условий)
+    if db_vin:
+        add_session(db_vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, 
+                    latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges)
+        print(f"Сохранена сессия для {db_vin}, odo={odo}, trip={trip}")
         
-        if odo_diff > 0:
-            print("DEBUG: перед add_session")
-            print(f"DEBUG: вызов add_session с параметрами: {db_vin}, {soh}, {odo}, {trip}, {bat_temp}, {soc}, {gids}, {amb_temp}, {latitude}, {longitude}, {rpm}, {speed}, {bat_volts}, {bat_amps}, {quick_charges}")
-            add_session(db_vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, 
-                        latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges)
-            print(f"Сохранена сессия для {db_vin}, пробег +{odo_diff} км")
-            
-            add_wh(token, odo_diff)
-            print(f"Начислено ёлок: {odo_diff}")
-            
-            update_last_odo(token, odo)
+        # Начисление ёлок (только если пробег увеличился)
+        if odo is not None:
+            last_odo = get_last_odo(token)
+            odo_diff = max(0, odo - last_odo)
+            if odo_diff > 0:
+                add_wh(token, odo_diff)
+                print(f"Начислено ёлок: {odo_diff}")
+                update_last_odo(token, odo)
     
-    # Начисление $LEAF
+    # Начисление $LEAF (1 раз в день, если поездка была)
     today = date.today().isoformat()
-    if db_vin and odo is not None:
-        last_odo = get_last_odo(token)
-        odo_diff = max(0, odo - last_odo)
-        if odo_diff >= 2 and not has_reward_today(db_vin, today):
+    if db_vin and trip >= 2:
+        if not has_reward_today(db_vin, today):
             add_leaf_token(token)
             add_reward(db_vin, today)
             print(f"Начислен токен $LEAF")
