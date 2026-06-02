@@ -13,7 +13,7 @@ app = Flask(__name__)
 def leafspy_update():
     token = request.args.get('user')
     vin = request.args.get('VIN', request.args.get('vin', '')).upper()
-    soh = request.args.get('soh', type=float)
+    soh = request.args.get('SOH', request.args.get('soh', type=float))
     odo = request.args.get('odo', type=int)
     trip = request.args.get('trip', type=float, default=0)
     
@@ -29,7 +29,7 @@ def leafspy_update():
     bat_amps = request.args.get('BatAmps', type=float)
     quick_charges = request.args.get('QC', type=int)
     
-    print(f"=== Запрос: token={token}, vin={vin}, odo={odo}, trip={trip}")
+    print(f"=== Запрос: token={token}, vin={vin}, soh={soh}, odo={odo}, trip={trip}")
     
     if not token:
         return {"status": "error", "message": "Missing token"}
@@ -42,7 +42,7 @@ def leafspy_update():
         db_vin = vin
         print(f"Привязан VIN {vin}")
     
-    # СОХРАНЯЕМ ВСЕ ЗАПРОСЫ (без условий)
+    # Сохраняем все запросы
     if db_vin:
         add_session(db_vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, 
                     latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges)
