@@ -12,7 +12,6 @@ app = Flask(__name__)
 @app.route('/update/', methods=['GET'])
 def leafspy_update():
     token = request.args.get('user')
-    # Ищем VIN и в заглавном, и в строчном варианте
     vin = request.args.get('VIN', request.args.get('vin', '')).upper()
     soh = request.args.get('soh', type=float)
     odo = request.args.get('odo', type=int)
@@ -42,7 +41,6 @@ def leafspy_update():
     
     print(f"DEBUG: db_vin из БД = {db_vin}")
     print(f"DEBUG: vin из запроса = {vin}")
-    print(f"DEBUG: условие (not db_vin and vin) = {not db_vin and vin}")
     
     if not db_vin and vin:
         print("DEBUG: Попытка привязать VIN")
@@ -56,19 +54,18 @@ def leafspy_update():
         print(f"DEBUG: last_odo={last_odo}, odo_diff={odo_diff}")
         
         if odo_diff > 0:
-            # Сохраняем сессию
+            print("DEBUG: перед add_session")
+            print(f"DEBUG: вызов add_session с параметрами: {db_vin}, {soh}, {odo}, {trip}, {bat_temp}, {soc}, {gids}, {amb_temp}, {latitude}, {longitude}, {rpm}, {speed}, {bat_volts}, {bat_amps}, {quick_charges}")
             add_session(db_vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, 
                         latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges)
             print(f"Сохранена сессия для {db_vin}, пробег +{odo_diff} км")
             
-            # Начисляем ёлки (1 км = 1 ёлка)
             add_wh(token, odo_diff)
             print(f"Начислено ёлок: {odo_diff}")
             
-            # Обновляем last_odo
             update_last_odo(token, odo)
     
-    # Начисление $LEAF (1 раз в день за поездку >=2 км)
+    # Начисление $LEAF
     today = date.today().isoformat()
     if db_vin and odo is not None:
         last_odo = get_last_odo(token)
