@@ -44,18 +44,24 @@ def get_last_odo(api_token):
     return result[0] if result else 0
 
 def add_session(vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges):
+    print(f"DEBUG add_session: vin={vin}, odo={odo}, trip={trip}, bat_temp={bat_temp}")
     conn = get_connection()
     c = conn.cursor()
-    c.execute("""
-        INSERT INTO sessions (
-            vin, soh, odo, trip_distance, 
-            bat_temp, soc, gids, amb_temp, 
-            latitude, longitude, rpm, speed, 
-            bat_volts, bat_amps, quick_charges
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """, (vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges))
-    conn.commit()
-    conn.close()
+    try:
+        c.execute("""
+            INSERT INTO sessions (
+                vin, soh, odo, trip_distance, 
+                bat_temp, soc, gids, amb_temp, 
+                latitude, longitude, rpm, speed, 
+                bat_volts, bat_amps, quick_charges
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges))
+        conn.commit()
+        print("DEBUG add_session: INSERT успешен")
+    except Exception as e:
+        print(f"DEBUG add_session: ОШИБКА - {e}")
+    finally:
+        conn.close()
 
 def add_wh(api_token, amount):
     conn = get_connection()
