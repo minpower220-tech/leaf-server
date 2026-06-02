@@ -19,7 +19,6 @@ def leafspy_update():
         try:
             odo = int(odo)
         except (ValueError, TypeError):
-            print(f"Ошибка: odo={odo} не удалось преобразовать в int")
             odo = None
     trip = request.args.get('trip', type=float, default=0)
     
@@ -34,13 +33,11 @@ def leafspy_update():
     bat_volts = request.args.get('BatVolts', type=float)
     bat_amps = request.args.get('BatAmps', type=float)
     quick_charges = request.args.get('QC', type=int)
-    
-    # Параметры зарядки
     plug_state = request.args.get('PlugState', type=int)
     charge_mode = request.args.get('ChrgMode', type=int)
     charge_power = request.args.get('ChrgPwr', type=int)
     
-    print(f"=== Запрос: token={token}, vin={vin}, odo={odo}, trip={trip}, plug_state={plug_state}")
+    print(f"=== Запрос: token={token}, vin={vin}, odo={odo}, trip={trip}")
     
     if not token:
         return {"status": "error", "message": "Missing token"}
@@ -53,15 +50,13 @@ def leafspy_update():
         db_vin = vin
         print(f"Привязан VIN {vin}")
     
-    # Сохраняем все запросы
     if db_vin:
         add_session(db_vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, 
                     latitude, longitude, rpm, speed, bat_volts, bat_amps, 
                     quick_charges, plug_state, charge_mode, charge_power)
         print(f"Сохранена сессия для {db_vin}, odo={odo}, trip={trip}")
         
-        # Начисление ёлок (только если пробег увеличился)
-        if odo is not None and isinstance(odo, int):
+        if odo is not None:
             last_odo = get_last_odo(token)
             odo_diff = max(0, odo - last_odo)
             if odo_diff > 0:
@@ -69,7 +64,6 @@ def leafspy_update():
                 print(f"Начислено ёлок: {odo_diff}")
                 update_last_odo(token, odo)
     
-    # Начисление $LEAF (1 раз в день, если поездка была)
     today = date.today().isoformat()
     if db_vin and trip >= 2:
         if not has_reward_today(db_vin, today):
