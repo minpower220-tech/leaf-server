@@ -29,13 +29,13 @@ def leafspy_update():
     bat_amps = request.args.get('BatAmps', type=float)
     quick_charges = request.args.get('QC', type=int)
     
-    print(f"=== Запрос: token={token}, vin={vin}, trip={trip}, soh={soh}, bat_temp={bat_temp}")
+    print(f"=== Запрос: token={token}, vin={vin}, trip={trip}")
     
     if not token:
         return {"status": "error", "message": "Missing token"}
     
     user = create_or_get_user(token, vin if vin else None)
-    tg_id, db_vin, leaf_balance, wh_balance = user
+    user_id, db_vin, leaf_balance, wh_balance = user
     
     if not db_vin and vin:
         update_user_vin(token, vin)
@@ -43,6 +43,7 @@ def leafspy_update():
         print(f"Привязан VIN {vin}")
     
     if db_vin and trip and trip > 0:
+        # Сохраняем сессию со всеми параметрами
         add_session(db_vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, 
                     latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges)
         print(f"Сохранена поездка: {trip} км")
