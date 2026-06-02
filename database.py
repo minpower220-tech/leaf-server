@@ -1,7 +1,6 @@
 import psycopg2
 from datetime import datetime
 
-# НЕ ЗАБУДЬ ЗАМЕНИТЬ [YOUR-PASSWORD] НА LeafToken2025Project
 DATABASE_URL = "postgresql://postgres.saulhayeumrjayidiyxd:LeafToken2025Project@aws-0-eu-west-1.pooler.supabase.com:6543/postgres"
 
 def get_connection():
@@ -15,7 +14,7 @@ def create_or_get_user(api_token, vin=None):
     user = c.fetchone()
 
     if not user:
-        # Если нет, создаём нового. Поле id (tg_id) заполнится само.
+        # Если нет, создаём нового. Поле id заполнится само.
         c.execute("INSERT INTO users (api_token, vin) VALUES (%s, %s) RETURNING id, vin, leaf_balance, wh_balance",
                   (api_token, vin))
         user = c.fetchone()
