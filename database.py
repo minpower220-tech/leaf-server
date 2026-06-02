@@ -9,13 +9,14 @@ def get_connection():
 def create_or_get_user(api_token, vin=None):
     conn = get_connection()
     c = conn.cursor()
-    c.execute("SELECT tg_id, vin, leaf_balance, wh_balance FROM users WHERE api_token = %s", (api_token,))
+    c.execute("SELECT id, vin, leaf_balance, wh_balance FROM users WHERE api_token = %s", (api_token,))
     user = c.fetchone()
+
     if not user:
-        c.execute("INSERT INTO users (api_token, vin) VALUES (%s, %s) RETURNING tg_id, vin, leaf_balance, wh_balance", 
+        c.execute("INSERT INTO users (api_token, vin) VALUES (%s, %s) RETURNING id, vin, leaf_balance, wh_balance",
                   (api_token, vin))
         user = c.fetchone()
-        print(f"Создан новый пользователь {api_token}")
+        print(f"Создан новый пользователь с токеном {api_token}")
     conn.commit()
     conn.close()
     return user
@@ -30,7 +31,7 @@ def update_user_vin(api_token, vin):
 def add_session(vin, soh, odo, trip):
     conn = get_connection()
     c = conn.cursor()
-    c.execute("INSERT INTO sessions (vin, soh, odo, trip_distance) VALUES (%s, %s, %s, %s)", 
+    c.execute("INSERT INTO sessions (vin, soh, odo, trip_distance) VALUES (%s, %s, %s, %s)",
               (vin, soh, odo, trip))
     conn.commit()
     conn.close()
