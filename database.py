@@ -11,6 +11,7 @@ def create_or_get_user(api_token, vin=None):
     c = conn.cursor()
     c.execute("SELECT id, vin, leaf_balance, wh_balance FROM users WHERE api_token = %s", (api_token,))
     user = c.fetchone()
+
     if not user:
         c.execute("INSERT INTO users (api_token, vin) VALUES (%s, %s) RETURNING id, vin, leaf_balance, wh_balance",
                   (api_token, vin))
@@ -42,9 +43,7 @@ def get_last_odo(api_token):
     conn.close()
     return result[0] if result else 0
 
-def add_session(vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, 
-                latitude, longitude, rpm, speed, bat_volts, bat_amps, 
-                quick_charges, plug_state, charge_mode, charge_power):
+def add_session(vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges):
     print(f"DEBUG add_session: vin={vin}, soh={soh}, odo={odo}, trip={trip}")
     conn = get_connection()
     c = conn.cursor()
@@ -54,12 +53,9 @@ def add_session(vin, soh, odo, trip, bat_temp, soc, gids, amb_temp,
                 vin, soh, odo, trip_distance, 
                 bat_temp, soc, gids, amb_temp, 
                 latitude, longitude, rpm, speed, 
-                bat_volts, bat_amps, quick_charges,
-                plug_state, charge_mode, charge_power
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, 
-              latitude, longitude, rpm, speed, bat_volts, bat_amps, 
-              quick_charges, plug_state, charge_mode, charge_power))
+                bat_volts, bat_amps, quick_charges
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges))
         conn.commit()
         print("DEBUG add_session: INSERT успешен")
     except Exception as e:
