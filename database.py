@@ -9,19 +9,16 @@ def get_connection():
 def create_or_get_user(api_token, vin=None):
     conn = get_connection()
     c = conn.cursor()
-    # Проверяем, существует ли пользователь с таким api_token
     c.execute("SELECT id, vin, leaf_balance, wh_balance FROM users WHERE api_token = %s", (api_token,))
     user = c.fetchone()
 
     if not user:
-        # Если нет, создаём нового. Поле id заполнится само.
         c.execute("INSERT INTO users (api_token, vin) VALUES (%s, %s) RETURNING id, vin, leaf_balance, wh_balance",
                   (api_token, vin))
         user = c.fetchone()
         print(f"Создан новый пользователь с токеном {api_token}")
     conn.commit()
     conn.close()
-    # Возвращаем кортеж (id, vin, leaf_balance, wh_balance)
     return user
 
 def update_user_vin(api_token, vin):
@@ -30,6 +27,21 @@ def update_user_vin(api_token, vin):
     c.execute("UPDATE users SET vin = %s WHERE api_token = %s", (vin, api_token))
     conn.commit()
     conn.close()
+
+def update_last_odo(api_token, odo):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("UPDATE users SET last_odo = %s WHERE api_token = %s", (odo, api_token))
+    conn.commit()
+    conn.close()
+
+def get_last_odo(api_token):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT last_odo FROM users WHERE api_token = %s", (api_token,))
+    result = c.fetchone()
+    conn.close()
+    return result[0] if result else 0
 
 def add_session(vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges):
     conn = get_connection()
