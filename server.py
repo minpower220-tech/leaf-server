@@ -14,7 +14,7 @@ def leafspy_update():
     token = request.args.get('user')
     vin = request.args.get('VIN', request.args.get('vin', '')).upper()
     soh = request.args.get('SOH', request.args.get('soh', type=float))
-    odo = request.args.get('odo', type=int)
+    odo = request.args.get('Odo', request.args.get('odo', type=int))
     trip = request.args.get('trip', type=float, default=0)
     
     bat_temp = request.args.get('BatTemp', type=float)
