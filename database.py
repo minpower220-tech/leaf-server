@@ -1,8 +1,7 @@
 import psycopg2
 from datetime import datetime
 
-# ЗАМЕНИ ЭТУ СТРОКУ НА ТВОЮ ИЗ SUPABASE!
-DATABASE_URL = "DATABASE_URL = "postgresql://postgres.saulhayeumrjayidiyxd:ZMtm7M3tzUvH%2Ax%2F@aws-0-eu-north-1.pooler.supabase.com:6543/postgres""
+DATABASE_URL = "postgresql://postgres.saulhayeumrjayidiyxd:LeafToken2025Project@aws-0-eu-west-1.pooler.supabase.com:6543/postgres"
 
 def get_connection():
     return psycopg2.connect(DATABASE_URL)
