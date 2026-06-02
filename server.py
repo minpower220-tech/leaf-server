@@ -16,7 +16,20 @@ def leafspy_update():
     odo = request.args.get('odo', type=int)
     trip = request.args.get('trip', type=float, default=0)
     
-    print(f"=== Запрос: token={token}, vin={vin}, trip={trip}")
+    # Дополнительные параметры от LeafSpy
+    bat_temp = request.args.get('BatTemp', type=float)
+    soc = request.args.get('SOC', type=float)
+    gids = request.args.get('Gids', type=int)
+    amb_temp = request.args.get('Amb', type=float)
+    latitude = request.args.get('Lat', type=float)
+    longitude = request.args.get('Long', type=float)
+    rpm = request.args.get('RPM', type=int)
+    speed = request.args.get('Speed', type=float)
+    bat_volts = request.args.get('BatVolts', type=float)
+    bat_amps = request.args.get('BatAmps', type=float)
+    quick_charges = request.args.get('QC', type=int)
+    
+    print(f"=== Запрос: token={token}, vin={vin}, trip={trip}, soh={soh}, bat_temp={bat_temp}")
     
     if not token:
         return {"status": "error", "message": "Missing token"}
@@ -30,7 +43,8 @@ def leafspy_update():
         print(f"Привязан VIN {vin}")
     
     if db_vin and trip and trip > 0:
-        add_session(db_vin, soh, odo, trip)
+        add_session(db_vin, soh, odo, trip, bat_temp, soc, gids, amb_temp, 
+                    latitude, longitude, rpm, speed, bat_volts, bat_amps, quick_charges)
         print(f"Сохранена поездка: {trip} км")
         add_wh(token, int(trip))
         print(f"Начислено Wh: {int(trip)}")
